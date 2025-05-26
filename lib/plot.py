@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 
 
-def plot_routes(vehicles: list, points: list) -> None:
+def plot_routes(
+    vehicles: list, points: list, output_file: str = "output/routes.png"
+) -> None:
     """Visualizes vehicle routes on a map."""
     plt.figure(figsize=(12, 8))
 
@@ -57,4 +59,5 @@ def plot_routes(vehicles: list, points: list) -> None:
     plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
+    plt.savefig(output_file)
     plt.show()

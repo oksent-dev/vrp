@@ -21,54 +21,52 @@ def save_routes(vehicles: list, filename: str = "output/routes.txt") -> None:
 
             for j, stop in enumerate(vehicle.route):
                 point = stop["point"]
-                if stop["is_warehouse"]:
-                    operation = stop.get("operation_type", "warehouse")
-                    remaining_load = stop.get("remaining_load", 0)
+                operation = stop.get("operation_type", "unknown")
+                amounts_at_stop = stop.get("amounts", {})
+                vehicle_load_after_op = stop.get("vehicle_load_after_op", {})
 
-                    if operation == "initial_load":
-                        f.write(
-                            f"Stop {j+1}: {point.label} | Initial load: {remaining_load}kg\n"
-                        )
-                    elif operation == "reload":
-                        f.write(
-                            f"Stop {j+1}: {point.label} | Reloaded to: {vehicle.capacity}kg\n"
-                        )
-                    elif operation == "unload":
-                        f.write(f"Stop {j+1}: {point.label} | Unloaded to: 0kg\n")
-                    else:
-                        f.write(
-                            f"Stop {j+1}: {point.label} | Load: {remaining_load}kg\n"
-                        )
-                else:
-                    operation = stop.get("operation_type", "delivery")
-                    amount = stop.get("amount", 0)
-                    remaining_demand = stop.get("remaining_demand", 0)
-                    remaining_load = stop.get("remaining_load", 0)
+                # Format amounts for display
+                amounts_str_parts = []
+                for good, amt in amounts_at_stop.items():
+                    if amt != 0:  # Only show goods that were part of the operation
+                        amounts_str_parts.append(f"{amt}kg {good}")
+                amounts_display = (
+                    ", ".join(amounts_str_parts) if amounts_str_parts else "(no goods)"
+                )
 
-                    if operation == "delivery":
-                        remaining_demand -= amount
-                        remaining_load -= amount
-                        f.write(
-                            f"Stop {j+1}: [Delivery] {point.label} | "
-                            f"Delivered: {amount}kg | "
-                            f"Remaining demand: {remaining_demand}kg | "
-                            f"Vehicle load after delivery: {remaining_load}kg\n"
-                        )
-                    elif operation == "pickup":
-                        remaining_demand += amount
-                        remaining_load += amount
-                        f.write(
-                            f"Stop {j+1}: [Pickup] {point.label} | "
-                            f"Picked up: {amount}kg | "
-                            f"Remaining pickup: {abs(remaining_demand)}kg | "
-                            f"Vehicle load after pickup: {remaining_load}kg\n"
-                        )
-                    else:
-                        f.write(
-                            f"Stop {j+1}: {point.label} | "
-                            f"Amount: {amount}kg | "
-                            f"Vehicle load: {remaining_load}kg\n"
-                        )
+                # Format vehicle load for display
+                load_str_parts = []
+                for good, load_val in vehicle_load_after_op.items():
+                    if load_val > 0:  # Only show goods currently in load
+                        load_str_parts.append(f"{load_val}kg {good}")
+                load_display = ", ".join(load_str_parts) if load_str_parts else "empty"
+                total_load_display = sum(vehicle_load_after_op.values())
+
+                f.write(f"Stop {j+1}: {point.label} | Operation: {operation.upper()}\n")
+                if amounts_at_stop and any(v != 0 for v in amounts_at_stop.values()):
+                    f.write(f"  Action: {amounts_display}\n")
+
+                if not point.is_warehouse:
+                    remaining_demands_at_point = stop.get(
+                        "remaining_demand_at_point", {}
+                    )
+                    demands_str_parts = []
+                    for good, dem_val in remaining_demands_at_point.items():
+                        if dem_val != 0:
+                            dem_type = "to deliver" if dem_val > 0 else "to pickup"
+                            demands_str_parts.append(
+                                f"{abs(dem_val)}kg {good} {dem_type}"
+                            )
+                    demands_display = (
+                        ", ".join(demands_str_parts)
+                        if demands_str_parts
+                        else "(all demands met)"
+                    )
+                    f.write(f"  Point Demands: {demands_display}\n")
+
+                f.write(
+                    f"  Vehicle Load After: {load_display} (Total: {total_load_display}kg)\n"
+                )
 
             f.write(
                 f"\nVehicle {vehicle.id} Total Distance: {vehicle_distance:.2f} km\n"
