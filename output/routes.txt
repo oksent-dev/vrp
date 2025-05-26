@@ -1,0 +1,58 @@
+
+Vehicle 1 route:
+Warehouse | Load: 1000/1000
+[Delivery] Point (24,38) | Delivered: 136kg | Remaining demand: 0kg | Vehicle load: 864kg
+[Delivery] Point (8,32) | Delivered: 115kg | Remaining demand: 0kg | Vehicle load: 749kg
+[Delivery] Point (1,48) | Delivered: 187kg | Remaining demand: 0kg | Vehicle load: 562kg
+[Delivery] Point (2,53) | Delivered: 171kg | Remaining demand: 0kg | Vehicle load: 391kg
+[Delivery] Point (3,67) | Delivered: 128kg | Remaining demand: 0kg | Vehicle load: 263kg
+[Delivery] Point (3,83) | Delivered: 169kg | Remaining demand: 0kg | Vehicle load: 94kg
+[Delivery] Point (15,95) | Delivered: 94kg | Remaining demand: 48kg | Vehicle load: 0kg
+
+Total distance: 115.29 km
+
+Vehicle 2 route:
+Warehouse | Load: 1000/1000
+[Delivery] Point (27,54) | Delivered: 192kg | Remaining demand: 0kg | Vehicle load: 808kg
+[Delivery] Point (29,75) | Delivered: 113kg | Remaining demand: 0kg | Vehicle load: 695kg
+[Delivery] Point (17,72) | Delivered: 197kg | Remaining demand: 0kg | Vehicle load: 498kg
+[Delivery] Point (15,95) | Delivered: 48kg | Remaining demand: 0kg | Vehicle load: 450kg
+[Delivery] Point (29,86) | Delivered: 128kg | Remaining demand: 0kg | Vehicle load: 322kg
+[Delivery] Point (50,75) | Delivered: 46kg | Remaining demand: 0kg | Vehicle load: 276kg
+[Delivery] Point (54,64) | Delivered: 185kg | Remaining demand: 0kg | Vehicle load: 91kg
+[Delivery] Point (51,53) | Delivered: 91kg | Remaining demand: 94kg | Vehicle load: 0kg
+Warehouse | Load: 1000/1000
+[Delivery] Point (51,53) | Delivered: 94kg | Remaining demand: 0kg | Vehicle load: 906kg
+[Delivery] Point (57,34) | Delivered: 192kg | Remaining demand: 0kg | Vehicle load: 714kg
+[Delivery] Point (61,31) | Delivered: 195kg | Remaining demand: 0kg | Vehicle load: 519kg
+[Delivery] Point (70,29) | Delivered: 144kg | Remaining demand: 0kg | Vehicle load: 375kg
+
+Total distance: 183.82 km
+
+Vehicle 3 route:
+Warehouse | Load: 1000/1000
+[Delivery] Point (40,3) | Delivered: 102kg | Remaining demand: 0kg | Vehicle load: 898kg
+[Delivery] Point (62,3) | Delivered: 149kg | Remaining demand: 0kg | Vehicle load: 749kg
+[Delivery] Point (82,12) | Delivered: 123kg | Remaining demand: 0kg | Vehicle load: 626kg
+[Delivery] Point (98,0) | Delivered: 189kg | Remaining demand: 0kg | Vehicle load: 437kg
+[Delivery] Point (100,26) | Delivered: 112kg | Remaining demand: 0kg | Vehicle load: 325kg
+[Delivery] Point (97,56) | Delivered: 163kg | Remaining demand: 0kg | Vehicle load: 162kg
+[Delivery] Point (97,58) | Delivered: 137kg | Remaining demand: 0kg | Vehicle load: 25kg
+[Delivery] Point (75,63) | Delivered: 25kg | Remaining demand: 139kg | Vehicle load: 0kg
+
+Total distance: 192.77 km
+
+Vehicle 4 route:
+Warehouse | Load: 1000/1000
+[Delivery] Point (75,63) | Delivered: 139kg | Remaining demand: 0kg | Vehicle load: 861kg
+[Delivery] Point (92,91) | Delivered: 164kg | Remaining demand: 0kg | Vehicle load: 697kg
+[Delivery] Point (80,92) | Delivered: 137kg | Remaining demand: 0kg | Vehicle load: 560kg
+[Delivery] Point (63,97) | Delivered: 157kg | Remaining demand: 0kg | Vehicle load: 403kg
+[Delivery] Point (60,83) | Delivered: 148kg | Remaining demand: 0kg | Vehicle load: 255kg
+[Delivery] Point (55,77) | Delivered: 197kg | Remaining demand: 0kg | Vehicle load: 58kg
+[Delivery] Point (50,75) | Delivered: 58kg | Remaining demand: 46kg | Vehicle load: 0kg
+
+Total distance: 118.21 km
+
+
+GRAND TOTAL DISTANCE: 610.10 km
