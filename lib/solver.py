@@ -6,6 +6,7 @@ class GeneticAlgorithmVRP:
     """
     Genetic algorithm for solving the vehicle routing problem with multiple warehouses,
     supporting both pickup and delivery operations.
+
     """
 
     def __init__(
@@ -45,10 +46,6 @@ class GeneticAlgorithmVRP:
 
     def _calculate_initial_load(self, vehicle: Vehicle, individual: list) -> dict:
         """Calculate optimal initial load for each good based on route analysis."""
-        # This is a simplified initial load strategy. A more sophisticated approach
-        # would analyze the specific demands of the route for each good.
-        # For now, distribute a quarter of vehicle capacity among goods, prioritizing those
-        # with higher total delivery demand in the current individual (route).
 
         initial_loads = {good: 0 for good in Vehicle.GOOD_TYPES}
         capacity_per_good_type = (
@@ -57,28 +54,19 @@ class GeneticAlgorithmVRP:
             else 0
         )
         if capacity_per_good_type == 0:
-            return initial_loads  # Not enough capacity to distribute
+            return initial_loads
 
-        # Simplified: equally distribute a portion of capacity
-        # A better way would be to check actual demands on the route for each good.
         for good in Vehicle.GOOD_TYPES:
             initial_loads[good] = capacity_per_good_type
 
-        # Ensure total initial load does not exceed vehicle capacity (due to integer division)
         current_total = sum(initial_loads.values())
-        if current_total > vehicle.capacity // 4:
-            # Basic correction: reduce from last good or proportionally
-            # This part needs refinement for optimal distribution
-            pass  # For simplicity, accept slight overage or implement reduction
 
         return initial_loads
 
     def calculate_service_plan(self, individual: list) -> list:
         """Calculates the service plan for pickup and delivery operations for multiple goods."""
         for p in self.service_points:
-            p.remaining_demands = (
-                p.demands.copy()
-            )  # Reset remaining demands for each good
+            p.remaining_demands = p.demands.copy()
 
         vehicles = []
         for i, capacity in enumerate(self.vehicles_capacities):
@@ -88,14 +76,11 @@ class GeneticAlgorithmVRP:
 
         for vehicle in vehicles:
             vehicle.reset()
-            # Calculate initial load for multiple goods
             initial_load_amounts = self._calculate_initial_load(vehicle, individual)
-            vehicle.partial_load(
-                initial_load_amounts
-            )  # Load the vehicle with these amounts
+            vehicle.partial_load(initial_load_amounts)
             vehicle.add_stop(
                 vehicle.assigned_warehouse,
-                amounts=initial_load_amounts,  # Log the amounts loaded
+                amounts=initial_load_amounts,
                 is_warehouse=True,
                 operation_type="initial_load",
             )
@@ -110,9 +95,8 @@ class GeneticAlgorithmVRP:
 
     def _handle_delivery(self, vehicles: list, point: Point) -> None:
         """Handles delivery operations for a specific point with multiple goods."""
-        # Iterate through each good type that needs delivery at this point
         for good_type, demand_amount in point.remaining_demands.items():
-            if demand_amount <= 0:  # This good is not for delivery or already delivered
+            if demand_amount <= 0:
                 continue
 
             needed_amount_for_good = demand_amount
@@ -120,25 +104,17 @@ class GeneticAlgorithmVRP:
                 vehicle = self._select_vehicle_for_delivery(
                     vehicles, point, good_type, needed_amount_for_good
                 )
-                if (
-                    not vehicle
-                ):  # No suitable vehicle found (e.g. all empty and can't reload)
-                    # This case should be handled: maybe log an error, or try to force a reload
+                if not vehicle:
                     break
 
-                # If vehicle has none of the current good_type, it needs to reload
                 if vehicle.current_loads.get(good_type, 0) == 0:
-                    nearest_warehouse = vehicle.find_nearest_warehouse(
-                        self.warehouses
-                    )  # Assume find_nearest_warehouse exists
+                    nearest_warehouse = vehicle.find_nearest_warehouse(self.warehouses)
                     if vehicle.route[-1]["point"] != nearest_warehouse:
                         vehicle.add_stop(
                             nearest_warehouse,
                             is_warehouse=True,
                             operation_type="travel_to_reload",
                         )
-                    # Simulate reloading: determine how much to reload. For now, assume it can get what it needs for this stop.
-                    # A more complex reload logic would consider future stops.
                     amount_to_reload = {
                         good_type: min(
                             needed_amount_for_good,
@@ -147,9 +123,7 @@ class GeneticAlgorithmVRP:
                             + vehicle.current_loads.get(good_type, 0),
                         )
                     }
-                    vehicle.reload(
-                        amount_to_reload
-                    )  # Assumes reload updates current_loads
+                    vehicle.reload(amount_to_reload)
                     vehicle.add_stop(
                         nearest_warehouse,
                         amounts=amount_to_reload,
@@ -157,7 +131,6 @@ class GeneticAlgorithmVRP:
                         operation_type="reload_specific_good",
                     )
 
-                # Deliver what the vehicle has or what the point needs for this good, whichever is less
                 can_deliver_for_good = min(
                     vehicle.current_loads.get(good_type, 0), needed_amount_for_good
                 )
@@ -167,32 +140,25 @@ class GeneticAlgorithmVRP:
                     vehicle.add_stop(
                         point, amounts=delivery_amounts, operation_type="delivery"
                     )
-                    point.deliver(
-                        delivery_amounts
-                    )  # Point updates its remaining demand for this good
+                    point.deliver(delivery_amounts)
                     needed_amount_for_good -= can_deliver_for_good
                 else:
-                    # Vehicle couldn't deliver (e.g. empty after reload attempt or error)
-                    break  # Break from while needed_amount_for_good > 0
+                    break
 
     def _handle_pickup(self, vehicles: list, point: Point) -> None:
         """Handles pickup operations for a specific point with multiple goods."""
-        # Iterate through each good type that needs pickup at this point
         for good_type, demand_amount in point.remaining_demands.items():
-            if demand_amount >= 0:  # This good is not for pickup or already picked up
+            if demand_amount >= 0:
                 continue
 
-            needed_pickup_for_good = abs(
-                demand_amount
-            )  # Convert negative demand to positive amount to pickup
+            needed_pickup_for_good = abs(demand_amount)
             while needed_pickup_for_good > 0:
                 vehicle = self._select_vehicle_for_pickup(
                     vehicles, point, good_type, needed_pickup_for_good
                 )
-                if not vehicle:  # No suitable vehicle found
+                if not vehicle:
                     break
 
-                # Determine how much of this good can be picked up by the vehicle
                 available_capacity_for_good = (
                     vehicle.capacity - vehicle.current_total_load
                 )
@@ -205,12 +171,9 @@ class GeneticAlgorithmVRP:
                     vehicle.add_stop(
                         point, amounts=pickup_amounts, operation_type="pickup"
                     )
-                    point.pickup(
-                        pickup_amounts
-                    )  # Point updates its remaining demand for this good
+                    point.pickup(pickup_amounts)
                     needed_pickup_for_good -= can_pickup_for_good
 
-                    # If vehicle is near full after pickup, consider unloading at a warehouse
                     if vehicle.current_total_load >= vehicle.capacity * 0.8:
                         nearest_warehouse = vehicle.find_nearest_warehouse(
                             self.warehouses
@@ -220,11 +183,8 @@ class GeneticAlgorithmVRP:
                             is_warehouse=True,
                             operation_type="unload_if_full",
                         )
-                        vehicle.current_loads = {
-                            g: 0 for g in Vehicle.GOOD_TYPES
-                        }  # Simulate full unload
+                        vehicle.current_loads = {g: 0 for g in Vehicle.GOOD_TYPES}
                 else:
-                    # Vehicle couldn't pick up (e.g., full)
                     break
 
     def _select_vehicle_for_delivery(
@@ -232,7 +192,6 @@ class GeneticAlgorithmVRP:
     ) -> Vehicle:
         best_vehicle = None
         min_cost = float("inf")
-        # print(f"Debug: Selecting vehicle for {amount_needed}kg {good_type} at {point.label} (Total points: {len(self.service_points)})")
 
         for vehicle in vehicles:
             current_position = (
@@ -243,55 +202,37 @@ class GeneticAlgorithmVRP:
 
             current_load_of_good = vehicle.current_loads.get(good_type, 0)
 
-            # Option 1: Vehicle has some or all of the good. Cost is direct travel.
             if current_load_of_good > 0:
                 cost = current_position.distance_to(point)
                 if cost < min_cost:
                     min_cost = cost
                     best_vehicle = vehicle
-                    # print(f"Debug: V{vehicle.id} (has {current_load_of_good}kg {good_type}) considered. Direct cost: {cost:.2f}. Min cost now: {min_cost:.2f}")
-                # If costs are equal, prefer vehicle with more of the good or that can satisfy the demand fully
+
                 elif cost == min_cost and best_vehicle is not None:
                     if (
                         current_load_of_good >= amount_needed
                         and best_vehicle.current_loads.get(good_type, 0) < amount_needed
                     ):
-                        best_vehicle = vehicle  # Prefer vehicle that can fully satisfy
-                        # print(f"Debug: V{vehicle.id} (has enough {good_type}) preferred over V{best_vehicle.id} due to full satisfaction at same cost {cost:.2f}")
+                        best_vehicle = vehicle
                     elif (
                         current_load_of_good
                         > best_vehicle.current_loads.get(good_type, 0)
                         and best_vehicle.current_loads.get(good_type, 0) < amount_needed
                     ):
-                        best_vehicle = vehicle  # Prefer vehicle with more stock if current best can't satisfy fully
-                        # print(f"Debug: V{vehicle.id} (has more {good_type}) preferred over V{best_vehicle.id} at same cost {cost:.2f}")
-
-            # Option 2: Vehicle needs to reload (or top up) this specific good.
-            # Check if vehicle has capacity to hold `amount_needed` of `good_type`,
-            # considering its current load of *other* goods.
-            # Capacity for this good = total_capacity - load_of_other_goods
+                        best_vehicle = vehicle
             load_of_other_goods = vehicle.current_total_load - current_load_of_good
             if vehicle.capacity - load_of_other_goods >= amount_needed:
                 nearest_warehouse = vehicle.find_nearest_warehouse(self.warehouses)
-                if not nearest_warehouse:  # Should not happen if warehouses exist
+                if not nearest_warehouse:
                     continue
 
-                # Cost includes travel to warehouse, then from warehouse to point.
                 cost_reload_trip = current_position.distance_to(
                     nearest_warehouse
                 ) + nearest_warehouse.distance_to(point)
 
                 if cost_reload_trip < min_cost:
                     min_cost = cost_reload_trip
-                    best_vehicle = (
-                        vehicle  # This vehicle is chosen to perform the reload trip
-                    )
-                    # print(f"Debug: V{vehicle.id} (reload {good_type}) considered. Reload cost: {cost_reload_trip:.2f}. Min cost now: {min_cost:.2f}")
-
-        # if best_vehicle:
-        #     print(f"Debug: Selected V{best_vehicle.id} for {amount_needed}kg {good_type} at {point.label}. Final Min cost: {min_cost:.2f}")
-        # else:
-        #     print(f"Warning: No vehicle selected for {amount_needed}kg {good_type} at {point.label}")
+                    best_vehicle = vehicle
 
         return best_vehicle
 
@@ -303,9 +244,7 @@ class GeneticAlgorithmVRP:
         min_cost = float("inf")
 
         for vehicle in vehicles:
-            if not vehicle.can_pickup(
-                {good_type: amount_to_pickup}
-            ):  # Check if it can pickup this specific amount
+            if not vehicle.can_pickup({good_type: amount_to_pickup}):
                 continue
 
             current_position = (
@@ -315,31 +254,24 @@ class GeneticAlgorithmVRP:
             )
             cost_to_point = current_position.distance_to(point)
 
-            # Efficiency: potential pickup amount / cost
-            # For now, simple distance cost for vehicles that can make the pickup.
             if cost_to_point < min_cost:
                 min_cost = cost_to_point
                 best_vehicle = vehicle
 
-        # Fallback: if multiple vehicles can do it with same min_cost,
-        # one with more remaining capacity might be slightly better for future pickups.
-        # For now, first one found with min_cost is fine.
-        if best_vehicle is None:  # Should only happen if no vehicle can pickup
-            # Try to find any vehicle that has *any* capacity left, even if not for the full amount_to_pickup
-            # This part of logic might need to allow partial pickups if no vehicle can take the full amount.
+        if best_vehicle is None:
             available_vehicles = [
                 v for v in vehicles if (v.capacity - v.current_total_load) > 0
             ]
             if not available_vehicles:
                 return None
             best_vehicle = min(
-                available_vehicles,  # Smallest distance, even if it can't take all
+                available_vehicles,
                 key=lambda v: (
                     v.route[-1]["point"] if v.route else v.assigned_warehouse
                 ).distance_to(point),
             )
-            # Ensure this fallback vehicle can actually pick up *something*
-            if not vehicle.can_pickup({good_type: 1}):  # Check for at least 1 unit
+
+            if not vehicle.can_pickup({good_type: 1}):
                 return None
 
         return best_vehicle
@@ -363,7 +295,6 @@ class GeneticAlgorithmVRP:
                     total_distance += last_point.distance_to(current_point)
                     last_point = current_point
 
-                # Add return to warehouse cost
                 if vehicle.route:
                     final_warehouse = vehicle.find_nearest_warehouse(self.warehouses)
                     total_distance += last_point.distance_to(final_warehouse)

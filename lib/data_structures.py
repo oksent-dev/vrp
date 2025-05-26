@@ -136,30 +136,22 @@ class Vehicle:
         If specific_goods is None, it implies it unloads everything and then loads
         what's specified, or simply sets load if it's an initial load.
         """
-        # This method is tricky. A simple "fill to capacity" is not well-defined with multiple goods.
-        # Let's assume for now that reload is called when specific goods are to be loaded.
-        # Or, if called from a warehouse stop, it might mean "prepare for next deliveries".
-        # The solver will likely manage specific loading amounts.
-        # For a simple interpretation, let's say it can load specific goods up to capacity.
         if specific_goods:
             for good, amount in specific_goods.items():
                 if self.current_total_load + amount <= self.capacity:
                     self.current_loads[good] += amount
                 else:
-                    # Ran out of capacity, load partially or stop
                     can_add = self.capacity - self.current_total_load
                     self.current_loads[good] += can_add
-                    break  # No more capacity
-        # If no specific goods, what does reload mean?
-        # For now, let's assume it's used by the solver which will specify amounts.
+                    break
         return self.current_loads
 
     def add_stop(
         self,
         point: Point,
-        amounts: dict = None,  # Changed from amount: int
+        amounts: dict = None,
         is_warehouse: bool = False,
-        operation_type: str = "delivery",  # e.g., "delivery", "pickup", "initial_load", "reload", "unload"
+        operation_type: str = "delivery",
     ) -> None:
         """Adds a stop to the vehicle's route."""
         if amounts is None:
@@ -167,42 +159,24 @@ class Vehicle:
 
         stop_info = {
             "point": point,
-            "amounts": amounts.copy(),  # Store the actual amounts transferred for this stop
+            "amounts": amounts.copy(),
             "operation_type": operation_type,
-            "vehicle_load_after_op": self.current_loads.copy(),  # Load before this op for consistency
+            "vehicle_load_after_op": self.current_loads.copy(),
             "remaining_demand_at_point": (
                 point.remaining_demands.copy() if not is_warehouse else None
             ),
             "is_warehouse": is_warehouse,
         }
 
-        # Update vehicle load based on operation.
-        # For "initial_load" and "reload", current_loads has already been updated
-        # by vehicle.partial_load() or vehicle.reload() respectively,
-        # which are called by the solver *before* add_stop.
-        # Thus, no further modification to self.current_loads is needed here for those types.
-
-        if not is_warehouse:  # Operations at customer points
+        if not is_warehouse:
             if operation_type == "delivery":
                 for good, amount in amounts.items():
                     self.current_loads[good] -= amount
             elif operation_type == "pickup":
                 for good, amount in amounts.items():
                     self.current_loads[good] += amount
-        # For warehouse operations:
-        elif operation_type == "unload":  # e.g., unloading everything at a warehouse
-            # This assumes "unload" means emptying the vehicle at a warehouse.
+        elif operation_type == "unload":
             self.current_loads = {good: 0 for good in Vehicle.GOOD_TYPES}
-        # No 'elif' for "initial_load" or "reload" here, as self.current_loads is already correct.
-        # The previous block causing double counting was:
-        # elif operation_type == "initial_load" or operation_type == "reload":
-        #     for good, amount in amounts.items():
-        #         self.current_loads[good] += amount
-
-        # Update stop_info to reflect vehicle load *after* any operation at this stop.
-        # For "initial_load" / "reload", this will be the load set by partial_load() / reload().
-        # For "delivery" / "pickup", this will be the load after delivering/picking up items.
-        # For "unload", this will be the zeroed-out load.
         stop_info["vehicle_load_after_op"] = self.current_loads.copy()
         self.route.append(stop_info)
 
@@ -216,7 +190,7 @@ class Vehicle:
         for good, amount in amounts_to_deliver.items():
             if self.current_loads.get(good, 0) < amount:
                 return False
-        return True  # If all goods are available in sufficient quantity
+        return True
 
     def partial_load(self, amounts_to_load: dict) -> dict:
         """Loads specific amounts of goods, respecting capacity.
@@ -227,27 +201,25 @@ class Vehicle:
             available_capacity = self.capacity - self.current_total_load
             load_this_good = min(amount, available_capacity)
 
-            if load_this_good <= 0:  # No capacity left or no amount to load
+            if load_this_good <= 0:
                 break
 
             self.current_loads[good] += load_this_good
             actually_loaded[good] = load_this_good
 
-            if self.current_total_load >= self.capacity:  # Exactly full
+            if self.current_total_load >= self.capacity:
                 break
         return actually_loaded
 
     def find_nearest_warehouse(self, warehouses: list["Point"]) -> "Point":
         """Finds the nearest warehouse to the vehicle's current location."""
         if not warehouses:
-            return None  # Or raise an error
+            return None
 
         current_position = (
             self.route[-1]["point"] if self.route else self.assigned_warehouse
         )
-        if (
-            not current_position
-        ):  # Should not happen if assigned_warehouse is guaranteed
+        if not current_position:
             return None
 
         nearest_warehouse = min(

@@ -12,17 +12,14 @@ def generate_demands_for_point(is_pickup: bool) -> dict:
     demands = {good: 0 for good in GOOD_TYPES}
     total_quantity = random.randint(100, 200)
 
-    # Distribute total_quantity among a random number of good types (1 to len(GOOD_TYPES))
     num_goods_for_point = random.randint(1, len(GOOD_TYPES))
     selected_goods = random.sample(GOOD_TYPES, num_goods_for_point)
 
     remaining_quantity = total_quantity
     for i, good in enumerate(selected_goods):
-        if i == num_goods_for_point - 1:  # Last good takes the remainder
+        if i == num_goods_for_point - 1:
             quantity = remaining_quantity
         else:
-            # Assign a random portion, ensuring at least 1kg if it's not the only good
-            # and leave enough for remaining goods (at least 1kg each)
             max_possible_for_this_good = remaining_quantity - (
                 num_goods_for_point - 1 - i
             )
@@ -34,24 +31,15 @@ def generate_demands_for_point(is_pickup: bool) -> dict:
 
         demands[good] = -quantity if is_pickup else quantity
         remaining_quantity -= quantity
-        if (
-            remaining_quantity <= 0 and i < num_goods_for_point - 1
-        ):  # Ensure loop finishes if quantity distributed early
+        if remaining_quantity <= 0 and i < num_goods_for_point - 1:
             break
 
-    # Ensure total quantity constraint is met, adjust last selected good if necessary
-    # This can happen if random distribution undershoots due to integer rounding or logic
     current_total_abs_demand = sum(abs(d) for d in demands.values())
     if current_total_abs_demand < total_quantity and selected_goods:
         diff = total_quantity - current_total_abs_demand
         last_good = selected_goods[-1]
         demands[last_good] += -diff if is_pickup else diff
-    elif (
-        current_total_abs_demand > total_quantity and selected_goods
-    ):  # Should ideally not happen with logic above
-        # This case indicates an issue, but let's try to cap it.
-        # For simplicity, we'll just ensure it doesn't exceed, might slightly alter distribution.
-        # A more robust solution would re-distribute.
+    elif current_total_abs_demand > total_quantity and selected_goods:
         pass
 
     return demands
@@ -86,9 +74,7 @@ def generate_pickup_points(num_points: int) -> list:
     for i in range(num_points):
         x = random.randint(10, 90)
         y = random.randint(10, 90)
-        point_demands = generate_demands_for_point(
-            is_pickup=True
-        )  # Demands are negative for pickup
+        point_demands = generate_demands_for_point(is_pickup=True)
         points.append(
             Point(
                 x,

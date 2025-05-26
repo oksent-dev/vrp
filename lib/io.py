@@ -25,16 +25,14 @@ def save_routes(vehicles: list, filename: str = "output/routes.txt") -> None:
                 amounts_at_stop = stop.get("amounts", {})
                 vehicle_load_after_op = stop.get("vehicle_load_after_op", {})
 
-                # Format amounts for display
                 amounts_str_parts = []
                 for good, amt in amounts_at_stop.items():
-                    if amt != 0:  # Only show goods that were part of the operation
+                    if amt != 0:
                         amounts_str_parts.append(f"{amt}kg {good}")
                 amounts_display = (
                     ", ".join(amounts_str_parts) if amounts_str_parts else "(no goods)"
                 )
 
-                # Format vehicle load for display
                 load_str_parts = []
                 for good, load_val in vehicle_load_after_op.items():
                     if load_val > 0:  # Only show goods currently in load
