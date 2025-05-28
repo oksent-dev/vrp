@@ -7,6 +7,15 @@ class GeneticAlgorithmVRP:
     Genetic algorithm for solving the vehicle routing problem with multiple warehouses,
     supporting both pickup and delivery operations.
 
+    attributes:
+        points (list): List of all points including warehouses and service points.
+        vehicles_capacities (list): List of capacities for each vehicle.
+        warehouses (list): List of warehouse points.
+        population_size (int): Size of the population for the genetic algorithm.
+        generations (int): Number of generations to run the algorithm.
+        mutation_rate (float): Probability of mutation in the genetic algorithm.
+        tournament_size (int): Size of the tournament for selection in the genetic algorithm.
+
     """
 
     def __init__(

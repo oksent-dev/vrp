@@ -19,14 +19,13 @@ class Point:
         self,
         x: int,
         y: int,
-        demands: dict = None,  # Changed from demand: int
+        demands: dict = None,
         label: str = None,
         is_warehouse: bool = False,
         point_type: str = None,
     ) -> None:
         self.x = x
         self.y = y
-        # Ensure demands is a dict, defaulting to zero for all good types if None
         self.demands = (
             demands if demands is not None else {good: 0 for good in Point.GOOD_TYPES}
         )
@@ -39,13 +38,12 @@ class Point:
         elif point_type:
             self.point_type = point_type
         else:
-            # Determine point_type based on the sum of demands
             total_demand_value = sum(self.demands.values())
             if total_demand_value > 0:
                 self.point_type = "delivery"
             elif total_demand_value < 0:
                 self.point_type = "pickup"
-            else:  # Could be a transit point or uninitialized, default to delivery for safety
+            else:
                 self.point_type = "delivery"
 
     @property
@@ -71,7 +69,6 @@ class Point:
         """
         for good, amount in amounts.items():
             if good in self.remaining_demands:
-                # E.g., remaining_demand = -10 (need to pick up 10). Pickup 5. New remaining = -5.
                 self.remaining_demands[good] += amount
         return self.remaining_demands
 
@@ -82,8 +79,6 @@ class Point:
         if self.point_type == "delivery":
             return self.deliver(amounts)
         elif self.point_type == "pickup":
-            # For pickup, the 'amounts' represent what the vehicle takes.
-            # These are positive values.
             return self.pickup(amounts)
         return self.remaining_demands
 
@@ -126,16 +121,7 @@ class Vehicle:
         self.route = []
 
     def reload(self, specific_goods: dict = None) -> dict:
-        """Reloads the vehicle.
-        If specific_goods is provided, attempts to load them up to capacity.
-        Otherwise, this method might need more sophisticated logic based on strategy,
-        for now, it's a placeholder or clears and then loads specific goods.
-        A full generic reload to capacity with mixed goods is complex without knowing
-        what to prioritize.
-        For now, let's assume reload means it can take specific goods from a warehouse.
-        If specific_goods is None, it implies it unloads everything and then loads
-        what's specified, or simply sets load if it's an initial load.
-        """
+        """Reloads the vehicle."""
         if specific_goods:
             for good, amount in specific_goods.items():
                 if self.current_total_load + amount <= self.capacity:
