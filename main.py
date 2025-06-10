@@ -103,7 +103,7 @@ def generate_warehouses(warehouse_positions: list) -> list:
                 demands=None,
                 label=f"Warehouse {i+1} ({x},{y})",
                 is_warehouse=True,
-            )  # demands=None will default to 0 for all goods
+            )
         )
     return warehouses
 
@@ -140,10 +140,14 @@ def main():
     )
     vehicles = ga.run()
 
-    save_routes(vehicles, "output/routes_pickup_delivery.txt")
-    plot_routes(vehicles, all_points)
+    routes_filename = "output/routes4.txt"
+    image_filename = "output/routes4.png"
 
-    print(f"\nResults saved to: output/routes_pickup_delivery.txt")
+    save_routes(vehicles, routes_filename)
+    plot_routes(vehicles, all_points, image_filename)
+
+    print(f"\nResults saved to: {routes_filename}")
+    print(f"Route visualization saved to: {image_filename}")
 
 
 if __name__ == "__main__":
